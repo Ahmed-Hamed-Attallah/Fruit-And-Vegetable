@@ -88,7 +88,7 @@ with tab2:
         # File uploader for the Logistic Regression model
         model_id = "1hz-vGWfZOQa1EjtKq_6965VNhRg4HqaT?usp=sharing"
         download_file_from_google_drive(model_id, "model_nn.pkl")
-        Log_model = jb.load('model_nn.pkl')
+        w,b = jb.load('w.pkl'),jb.load('b.pkl')
         st.write("Logistic Regression Model Loaded Successfully!")
 
     classes_name = jb.load('classes_name.pkl')
@@ -141,9 +141,7 @@ with tab2:
         img_flattened = img_rescaled.flatten().reshape(-1, 1)
         return img_flattened
 
-    def predict_with_nn(model, image):
-        w = model['w']
-        b = model['b']
+    def predict_with_nn(w,b, image):
         img_flattened = preprocess_image_for_nn(image)
         A = softmax(np.dot(w.T, img_flattened) + b)
         Y_prediction = np.argmax(A, axis=0)
@@ -186,7 +184,7 @@ with tab2:
             for image in uploaded_images:
                 content = image.read()
                 img = tf.image.decode_jpeg(content, channels=3)
-                prediction = predict_with_nn(Log_model, img)
+                prediction = predict_with_nn(w,b, img)
                 st.image(image, caption=f'Predicted class: {classes_name[prediction[0]]}', use_column_width=True)
         else:
             st.warning('No images were uploaded')
