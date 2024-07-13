@@ -7,8 +7,7 @@ import numpy as np
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
 from PIL import Image
-import requests
-from io import BytesIO
+import gdown  # Changed to use gdown for downloading files
 
 st.set_page_config(page_icon='🍎', page_title='Fruits And Vegetables Model')
 tab1, tab2 = st.tabs(['Introduction', 'Models'])
@@ -58,10 +57,8 @@ with tab1:
 
 with tab2:
     def download_file_from_google_drive(id, destination):
-        URL = "https://drive.google.com/uc?id=" + id
-        response = requests.get(URL)
-        with open(destination, 'wb') as f:
-            f.write(response.content)
+        URL = f"https://drive.google.com/uc?id={id}"
+        gdown.download(URL, destination, quiet=False)
 
     class MyModel(nn.Module):
         def __init__(self):
@@ -87,10 +84,10 @@ with tab2:
 
     with st.spinner('Loading TensorFlow model (VGG16)'):
         # File uploader for the TensorFlow model
-        model_id = "1hz-vGWfZOQa1EjtKq_6965VNhRg4HqaT?usp=sharing"
+        model_id = "1hz-vGWfZOQa1EjtKq_6965VNhRg4HqaT"
         download_file_from_google_drive(model_id, '28_VGG16_88.h5')
         try:
-            tensor_model = tf.keras.models.load_model('28_VGG16_88.h5')
+            tensor_model = tf.keras.models.load_model('28_VGG16_88.h5', custom_objects={'tf': tf})
             st.write("TensorFlow Model Loaded Successfully!")
         except Exception as e:
             st.error(f"Error loading TensorFlow model: {e}")
