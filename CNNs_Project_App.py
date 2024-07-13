@@ -15,7 +15,7 @@ tab1, tab2 = st.tabs(['Introduction', 'Models'])
 
 with tab1:
     st.header('Introduction')
-    st.markdown('#### **In this project, three different CNN models were trained on approximately 29,000 images.**')
+    st.markdown('#### **In this project, 2 different CNN models were trained on approximately 29,000 images.**')
     st.markdown('##### These images included 14 types of vegetables and fruits, divided into 28 categories.')
     col1, col2, col3, col4 = st.columns([1, 1, 1, 1])
     
@@ -51,10 +51,9 @@ with tab1:
             st.write('Rotten')
             st.image(rotten_img)
 
-    st.markdown("""#### Three different approaches were used in this project:
+    st.markdown("""#### 2 different approaches were used in this project:
 \n1-TensorFlow
 \n2-PyTorch
-\n3-General Architecture of the Learning Algorithm
 \n**For the third approach**, the focus was solely on the method. This approach did not yield favorable results, however, there are ways to improve this model. Updates will be made in the near future.""")
 
 with tab2:
@@ -84,14 +83,6 @@ with tab2:
     model_torch = MyModel()
     model_torch.load_state_dict(torch.load('28_EfficientNet_97.pth'), strict=False)
 
-    with st.spinner('Loading Logistic Regression model'):
-        # File uploader for the Logistic Regression model
-        model_id = "1hz-vGWfZOQa1EjtKq_6965VNhRg4HqaT?usp=sharing"
-        download_file_from_google_drive(model_id, "w.pkl")
-        w = jb.load('w.pkl')
-        download_file_from_google_drive(model_id, "b.pkl")
-        b = jb.load('b.pkl')
-        st.write("Logistic Regression Model Loaded Successfully!")
 
     classes_name = jb.load('classes_name.pkl')
 
@@ -132,23 +123,6 @@ with tab2:
                 predictions.append(preds.item())
         return predictions
 
-    def softmax(z):
-        exp_z = np.exp(z - np.max(z, axis=0, keepdims=True))
-        return exp_z / np.sum(exp_z, axis=0, keepdims=True)
-
-    def preprocess_image_for_nn(image):
-        img_rescaled = tf.image.resize(image, [224, 224])
-        img_rescaled = img_rescaled / 255.0
-        img_rescaled = img_rescaled.numpy()
-        img_flattened = img_rescaled.flatten().reshape(-1, 1)
-        return img_flattened
-
-    def predict_with_nn(w,b, image):
-        img_flattened = preprocess_image_for_nn(image)
-        A = softmax(np.dot(w.T, img_flattened) + b)
-        Y_prediction = np.argmax(A, axis=0)
-        return Y_prediction
-
     def rescale(image):
         image = tf.cast(image, tf.float32)
         image /= 255.0
@@ -162,12 +136,10 @@ with tab2:
         return img
 
     uploaded_images = st.file_uploader("Choose a file", type=["jpg", "jpeg", "png"], accept_multiple_files=True)
-    col1, col2, col3 = st.columns([1, 1, 1])
+    col1, col2, col3 = st.columns([1,0.10,1])
 
     with col1:
         torch_prediction = st.button('Predict With Torch Model (Accuracy 97%)')
-    with col2:
-        nn_prediction = st.button('Predict With Logistic Regression Model')
     with col3:
         tensor_prediction = st.button('Predict With VGG16 tf (Accuracy 88%)')
 
@@ -178,16 +150,6 @@ with tab2:
             predictions = predict_with_torch(model_torch, dataloader)
             for idx, (prediction, file) in enumerate(zip(predictions, uploaded_images)):
                 st.image(file, caption=f'Predicted class: {classes_name[prediction]}', use_column_width=True)
-        else:
-            st.warning('No images were uploaded')
-
-    if nn_prediction:
-        if uploaded_images:
-            for image in uploaded_images:
-                content = image.read()
-                img = tf.image.decode_jpeg(content, channels=3)
-                prediction = predict_with_nn(w,b, img)
-                st.image(image, caption=f'Predicted class: {classes_name[prediction[0]]}', use_column_width=True)
         else:
             st.warning('No images were uploaded')
 
