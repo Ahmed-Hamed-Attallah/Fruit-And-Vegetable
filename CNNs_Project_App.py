@@ -83,15 +83,17 @@ with tab2:
     model_torch = MyModel()
     model_torch.load_state_dict(torch.load('28_EfficientNet_97.pth'), strict=False)
 
-
     classes_name = jb.load('classes_name.pkl')
 
     with st.spinner('Loading TensorFlow model (VGG16)'):
         # File uploader for the TensorFlow model
         model_id = "1hz-vGWfZOQa1EjtKq_6965VNhRg4HqaT?usp=sharing"
         download_file_from_google_drive(model_id, '28_VGG16_88.h5')
-        tensor_model = tf.keras.models.load_model('28_VGG16_88.h5')
-        st.write("TensorFlow Model Loaded Successfully!")
+        try:
+            tensor_model = tf.keras.models.load_model('28_VGG16_88.h5')
+            st.write("TensorFlow Model Loaded Successfully!")
+        except Exception as e:
+            st.error(f"Error loading TensorFlow model: {e}")
 
     transform = transforms.Compose([
         transforms.Resize((224, 224)),
