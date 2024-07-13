@@ -7,7 +7,8 @@ import numpy as np
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
 from PIL import Image
-import gdown  # Changed to use gdown for downloading files
+import requests  # Changed from gdown to requests
+from io import BytesIO
 
 st.set_page_config(page_icon='🍎', page_title='Fruits And Vegetables Model')
 tab1, tab2 = st.tabs(['Introduction', 'Models'])
@@ -58,7 +59,9 @@ with tab1:
 with tab2:
     def download_file_from_google_drive(id, destination):
         URL = f"https://drive.google.com/uc?id={id}"
-        gdown.download(URL, destination, quiet=False)
+        response = requests.get(URL)
+        with open(destination, 'wb') as f:
+            f.write(response.content)
 
     class MyModel(nn.Module):
         def __init__(self):
