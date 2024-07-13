@@ -2,21 +2,21 @@ import streamlit as st
 import joblib as jb
 import torch
 import torch.nn as nn
-import tensorflow as tf
 import numpy as np
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
 from PIL import Image
-import requests  # Changed from gdown to requests
-from io import BytesIO
 
 st.set_page_config(page_icon='🍎', page_title='Fruits And Vegetables Model')
-tab1, tab2 = st.tabs(['Introduction', 'Models'])
+tab1, tab2 = st.tabs(['Introduction', 'Model'])
 
 with tab1:
     st.header('Introduction')
-    st.markdown('#### **In this project, 2 different CNN models were trained on approximately 29,000 images.**')
-    st.markdown('##### These images included 14 types of vegetables and fruits, divided into 28 categories.')
+    st.markdown('#### **In this project, I trained 3 different models: TensorFlow, General Architecture of the Learning Algorithm, and PyTorch.**')
+    st.markdown('##### The models were trained on approximately 29,000 images of 14 types of vegetables and fruits, divided into 28 categories.')
+    st.markdown('##### The model with the highest accuracy (97%) is the PyTorch-based EfficientNet model.')
+    st.markdown('**In this app, I am deploying only the PyTorch model with the highest accuracy for fruit and vegetable classification tasks.**')
+    
     col1, col2, col3, col4 = st.columns([1, 1, 1, 1])
     
     for col, fruit, healthy_img, rotten_img in zip(
@@ -51,18 +51,12 @@ with tab1:
             st.write('Rotten')
             st.image(rotten_img)
 
-    st.markdown("""#### 2 different approaches were used in this project:
-\n1-TensorFlow
-\n2-PyTorch
-\n**For the third approach**, the focus was solely on the method. This approach did not yield favorable results, however, there are ways to improve this model. Updates will be made in the near future.""")
+    st.markdown("""#### The model used in this app:
+\n**PyTorch EfficientNet Model**\n
+**Accuracy: 97%**
+\nThis model was trained to classify 28 different types of fruits and vegetables and is the most accurate model used in this project.""")
 
 with tab2:
-    def download_file_from_google_drive(id, destination):
-        URL = f"https://drive.google.com/uc?id={id}"
-        response = requests.get(URL)
-        with open(destination, 'wb') as f:
-            f.write(response.content)
-
     class MyModel(nn.Module):
         def __init__(self):
             super(MyModel, self).__init__()
@@ -84,16 +78,6 @@ with tab2:
     model_torch.load_state_dict(torch.load('28_EfficientNet_97.pth'), strict=False)
 
     classes_name = jb.load('classes_name.pkl')
-
-    with st.spinner('Loading TensorFlow model (VGG16)'):
-        # File uploader for the TensorFlow model
-        model_id = "1hz-vGWfZOQa1EjtKq_6965VNhRg4HqaT"
-        download_file_from_google_drive(model_id, '28_VGG16_88.h5')
-        try:
-            tensor_model = tf.keras.models.load_model('28_VGG16_88.h5', custom_objects={'tf': tf})
-            st.write("TensorFlow Model Loaded Successfully!")
-        except Exception as e:
-            st.error(f"Error loading TensorFlow model: {e}")
 
     transform = transforms.Compose([
         transforms.Resize((224, 224)),
@@ -125,42 +109,14 @@ with tab2:
                 predictions.append(preds.item())
         return predictions
 
-    def rescale(image):
-        image = tf.cast(image, tf.float32)
-        image /= 255.0
-        return tf.image.resize(image, [224, 224])
-
-    def decode_image(uploaded_file):
-        content = uploaded_file.read()
-        img = tf.image.decode_jpeg(content, channels=3)
-        img = rescale(img)
-        img = tf.expand_dims(img, axis=0)  # Add batch dimension
-        return img
-
     uploaded_images = st.file_uploader("Choose a file", type=["jpg", "jpeg", "png"], accept_multiple_files=True)
-    col1, col2, col3 = st.columns([1,0.10,1])
 
-    with col1:
-        torch_prediction = st.button('Predict With Torch Model (Accuracy 97%)')
-    with col3:
-        tensor_prediction = st.button('Predict With VGG16 tf (Accuracy 88%)')
-
-    if torch_prediction:
+    if st.button('Predict With PyTorch Model (Accuracy 97%)'):
         if uploaded_images:
             dataset = StreamlitImageDataset(uploaded_files=uploaded_images, transform=transform)
             dataloader = DataLoader(dataset, batch_size=1, shuffle=False)
             predictions = predict_with_torch(model_torch, dataloader)
             for idx, (prediction, file) in enumerate(zip(predictions, uploaded_images)):
                 st.image(file, caption=f'Predicted class: {classes_name[prediction]}', use_column_width=True)
-        else:
-            st.warning('No images were uploaded')
-
-    if tensor_prediction:
-        if uploaded_images:
-            for image in uploaded_images:
-                img = decode_image(image)
-                prediction = tensor_model.predict(img)[0]  # No need for [0][0]
-                predicted_class = np.argmax(prediction)  # Get the index of the highest probability
-                st.image(image, caption=f'Predicted class: {classes_name[predicted_class]}', use_column_width=True)
         else:
             st.warning('No images were uploaded')
