@@ -87,8 +87,10 @@ with tab2:
     with st.spinner('Loading Logistic Regression model'):
         # File uploader for the Logistic Regression model
         model_id = "1hz-vGWfZOQa1EjtKq_6965VNhRg4HqaT?usp=sharing"
-        download_file_from_google_drive(model_id, "model_nn.pkl")
-        w,b = jb.load('w.pkl'),jb.load('b.pkl')
+        download_file_from_google_drive(model_id, "w.pkl")
+        w = jb.load('w.pkl')
+        download_file_from_google_drive(model_id, "b.pkl")
+        b = jb.load('b.pkl')
         st.write("Logistic Regression Model Loaded Successfully!")
 
     classes_name = jb.load('classes_name.pkl')
